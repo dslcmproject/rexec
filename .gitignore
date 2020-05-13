@@ -1,0 +1,4 @@
+__pycache__
+dist/
+rexec.egg-info/
+venv
