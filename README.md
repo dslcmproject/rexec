@@ -61,7 +61,7 @@ Sample code:
 
 ```
 import rexec
-output_json = rexec.Proxy((<daemon-server>, <daemon-port>), <secret-password>, <action-name>, <input-json>)
+output_json = rexec.check_call((<daemon-server>, <daemon-port>), <secret-password>, <action-name>, <input-json>)
 ```
 
 The client does not need PyWin32
