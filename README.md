@@ -48,6 +48,8 @@ ADDRESS = ('<daemon-server-ip-or-name>', daemon-port)
 AUTHKEY = b'<secret-password>'
 ```
 
+timeout in seconds
+
 Start/Stop/Delete the service
 
 ```
