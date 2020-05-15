@@ -17,7 +17,7 @@ if cmd_arg == 'exception':
     assert False, "Invalid argument"
 
 if cmd_arg == 'timeout':
-    time.sleep(5)
+    time.sleep(120)
     sys.exit(0)
 
 if cmd_arg == 'returncode':
