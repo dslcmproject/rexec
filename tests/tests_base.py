@@ -10,6 +10,7 @@ import rexec
 BASE_DIR = os.path.dirname(__file__)
 CONFIG_PATH = os.path.join(BASE_DIR, "config.py")
 CONFIG = runpy.run_path(CONFIG_PATH)
+ACTIONS = CONFIG["ACTIONS"]
 LOG_PATH = CONFIG["LOG_PATH"]
 ADDRESS = CONFIG["ADDRESS"]
 AUTHKEY = CONFIG["AUTHKEY"]
@@ -20,7 +21,14 @@ def run_server():
     s.listen()
 
 
-class Test(unittest.TestCase):
+class TestActions(unittest.TestCase):
+    def test(self):
+        actions = rexec.Actions(ACTIONS)
+        result = actions.execute("action-ok", b'{"name": "first-request"}')
+        self.assertEqual(result, (True, b'{"name": "first-response"}'))
+
+
+class TestServer(unittest.TestCase):
     def setUp(self):
         self.executor = Process(target=run_server)
         self.executor.start()

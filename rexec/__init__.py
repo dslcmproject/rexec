@@ -12,13 +12,15 @@ class RemoteException(Exception):
     pass
 
 
-def check_call(address, authkey, action, request):
-    with connection.Client(address, authkey=authkey) as conn:
-        conn.send([action, json.dumps(request).encode()])
-        success, output = conn.recv()
-        if not success:
-            raise RemoteException(output)
-        return json.loads(output.decode())
+def check_call(server_address, authkey, action, request):
+    with connection.Listener(authkey=authkey, family='AF_INET') as listener:
+        with connection.Client(server_address, authkey=authkey) as conn:
+            conn.send([listener.address, action, json.dumps(request).encode()])
+        with listener.accept() as conn:
+            success, output = conn.recv()
+            if not success:
+                raise RemoteException(output)
+            return json.loads(output.decode())
 
 
 class Actions:
@@ -33,7 +35,7 @@ class Actions:
     def __init__(self, actions):
         self.actions = actions
 
-    def __call__(self, action, data):
+    def run_process(self, action, data):
         try:
             params = self.actions[action]
         except KeyError:
@@ -52,6 +54,18 @@ class Actions:
             process.communicate()
             raise Exception("TIMEOUT")
 
+    def execute(self, action, data):
+        try:
+            logger.info("running...")
+            output = self.run_process(action, data)
+            success = True
+            logger.info("run ok")
+        except Exception as ex:
+            output = str(ex)
+            success = False
+            logger.info("run error")
+        return success, output
+
 
 class Server:
     def __init__(self, config_path):
@@ -62,23 +76,22 @@ class Server:
         self.actions = Actions(config["ACTIONS"])
         self.listener = None
 
-    def close(self):
-        self.listener.close()
-
     def _listen(self):
         with connection.Listener(self.address, authkey=self.authkey) as self.listener:
             logger.info("listening: %s", self.listener.address)
             while True:
+                logger.info("accepting...")
                 with self.listener.accept() as conn:
                     logger.info("connection received: %s", self.listener.last_accepted)
-                    action, data = conn.recv()
-                    try:
-                        output = self.actions(action, data)
-                        success = True
-                    except Exception as ex:
-                        output = str(ex)
-                        success = False
+                    logger.info("receiving...")
+                    response_address, action, data = conn.recv()
+                    success, output = self.actions.execute(action, data)
+                with connection.Client(response_address, authkey=self.authkey) as conn:
+                    logger.info("sending...")
                     conn.send([success, output])
+
+    def close(self):
+        self.listener.close()
 
     def listen(self):
         try:
