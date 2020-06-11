@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='rexec',
-    version='0.0.2',
+    version='0.0.3',
     description='Run Remote Executables',
     license="MIT",
     author='Marco De Paoli',

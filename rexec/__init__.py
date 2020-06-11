@@ -12,10 +12,10 @@ class RemoteException(Exception):
     pass
 
 
-def check_call(server_address, authkey, action, request):
-    with connection.Listener(authkey=authkey, family='AF_INET') as listener:
+def check_call(client_address, server_address, authkey, action, request):
+    with connection.Listener(address=("0.0.0.0", client_address[1]), authkey=authkey, family='AF_INET') as listener:
         with connection.Client(server_address, authkey=authkey) as conn:
-            conn.send([listener.address, action, json.dumps(request).encode()])
+            conn.send([client_address, action, json.dumps(request).encode()])
         with listener.accept() as conn:
             success, output = conn.recv()
             if not success:
@@ -83,9 +83,10 @@ class Server:
                 logger.info("accepting...")
                 with self.listener.accept() as conn:
                     logger.info("connection received: %s", self.listener.last_accepted)
-                    logger.info("receiving...")
                     response_address, action, data = conn.recv()
+                    logger.info("response_address: %s, action: %s", response_address, action)
                     success, output = self.actions.execute(action, data)
+                logger.info("connecting...")
                 with connection.Client(response_address, authkey=self.authkey) as conn:
                     logger.info("sending...")
                     conn.send([success, output])

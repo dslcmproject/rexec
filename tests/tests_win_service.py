@@ -11,7 +11,7 @@ BASE_DIR = os.path.dirname(__file__)
 CONFIG_PATH = os.path.join(BASE_DIR, "config.py")
 CONFIG = runpy.run_path(CONFIG_PATH)
 LOG_PATH = CONFIG["LOG_PATH"]
-ADDRESS = CONFIG["ADDRESS"]
+SERVER_ADDRESS = CONFIG["ADDRESS"]
 AUTHKEY = CONFIG["AUTHKEY"]
 
 
@@ -34,5 +34,5 @@ class Test(unittest.TestCase):
         time.sleep(2)
         subprocess.check_call(["sc", "start", "rexec_remote_test"])
         time.sleep(2)
-        result = check_call(ADDRESS, AUTHKEY, "action-ok", {"name": "first-request"})
+        result = check_call(("localhost", 5006), SERVER_ADDRESS, AUTHKEY, "action-ok", {"name": "first-request"})
         self.assertEqual(result, {"name": "first-response"})
